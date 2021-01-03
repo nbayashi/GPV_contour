@@ -72,7 +72,7 @@ class GPVContourDialog(QtWidgets.QDialog, FORM_CLASS):
         if layer.name().split('_')[5] == 'MSM':
             if layer.name().split('_')[8] =='Lsurf':
                 self.comboBox.clear()
-                self.comboBox.addItems(['海面更正気圧', '地上気圧'])
+                self.comboBox.addItems(['海面更正気圧', '地上気圧','気温'])
             elif layer.name().split('_')[8] =='L-pall':
                 self.comboBox.clear()
                 self.comboBox.addItems(['1000hPa気圧面高度', '975hPa気圧面高度','950hPa気圧面高度','925hPa気圧面高度','900hPa気圧面高度','850hPa気圧面高度','800hPa気圧面高度','700hPa気圧面高度','600hPa気圧面高度','500hPa気圧面高度','400hPa気圧面高度','300hPa気圧面高度','250hPa気圧面高度','200hPa気圧面高度','150hPa気圧面高度','100hPa気圧面高度'])
@@ -99,31 +99,36 @@ class GPVContourDialog(QtWidgets.QDialog, FORM_CLASS):
         date = layer.name().split('_')[4]
         model = layer.name().split('_')[5]
 
-
+        # forcast step
         if model == 'MSM':
             height = layer.name().split('_')[8]
             if height == 'Lsurf':
                 forcastStep = 1
+                elementDic = {'海面更正気圧':0,'地上気圧':1,'気温':4}
             else:
                 forcastStep = 3
+                elementDic = {'1000hPa気圧面高度':0, '975hPa気圧面高度':6,'950hPa気圧面高度':12,'925hPa気圧面高度':18,'900hPa気圧面高度':24,'850hPa気圧面高度':30,'800hPa気圧面高度':36,'700hPa気圧面高度':42,'600hPa気圧面高度':48,'500hPa気圧面高度':54,'400hPa気圧面高度':60,'300hPa気圧面高度':66,'250hPa気圧面高度':72,'200hPa気圧面高度':77,'150hPa気圧面高度':82,'100hPa気圧面高度':87}
+        
             FH = int(layer.name().split('_')[9][2:4])
         
+        # interval
         if element == '海面更正気圧':
             interval = 100
         elif element == '地上気圧':
             interval = 1000
         elif element[-2:] == '高度':
             interval = 60
+        elif element[-2:] == '気温':
+            interval = 3
 
-        bands = self.get_bands(layer,FH,element)
+        bands = self.get_bands(layer,elementDic,FH,element)
         
         self.make_contour(layer,interval,element,date,FH,bands,forcastStep)
         self.close()
 
 
 
-    def get_bands(self,layer,FH,element):
-        elementDic = {'海面更正気圧':0,'地上気圧':1,'1000hPa気圧面高度':0, '975hPa気圧面高度':6,'950hPa気圧面高度':12,'925hPa気圧面高度':18,'900hPa気圧面高度':24,'850hPa気圧面高度':30,'800hPa気圧面高度':36,'700hPa気圧面高度':42,'600hPa気圧面高度':48,'500hPa気圧面高度':54,'400hPa気圧面高度':60,'300hPa気圧面高度':66,'250hPa気圧面高度':72,'200hPa気圧面高度':77,'150hPa気圧面高度':82,'100hPa気圧面高度':87}
+    def get_bands(self,layer,elementDic,FH,element):
         bandOffset = elementDic[element]
         if layer.name().split('_')[8] == 'Lsurf':
             if FH == 0:
@@ -131,8 +136,8 @@ class GPVContourDialog(QtWidgets.QDialog, FORM_CLASS):
                 for band in range(23+bandOffset, layer.bandCount(), 12):
                     bands.append(band)
             else:
-                bands = [1+bandOffset, 13+bandOffset]
-                for band in range(25+bandOffset, layer.bandCount(), 12):
+                bands =[]
+                for band in range(1+bandOffset, layer.bandCount(), 12):
                     bands.append(band)
         else:
             bands = []
@@ -148,6 +153,9 @@ class GPVContourDialog(QtWidgets.QDialog, FORM_CLASS):
         elif element[-2:] == '高度':
             labelField = '"Contour"'
             labelExpression = '"Contour" %120=0'
+        elif element[-2:] == '気温':
+            labelField = '"Contour"'
+            labelExpression = '"Contour" %6=0'
 
         return (labelField,labelExpression)
 
