@@ -85,6 +85,7 @@ class GPVContourDialog(QtWidgets.QDialog, FORM_CLASS):
     def dlg_close(self):
         self.close()
 
+
     def run(self):
         layer = self.mMapLayerComboBox_input.currentLayer()
         try:
